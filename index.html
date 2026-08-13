@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nightly Thanks">
+<meta name="theme-color" content="#14172C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Nightly Thanks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2314172C'/%3E%3Ccircle cx='50' cy='48' r='16' fill='%23E8B860'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg: #14172C;
+    --bg-card: #1E2242;
+    --bg-card-raised: #262B52;
+    --accent-gold: #E8B860;
+    --accent-gold-dim: #7A6636;
+    --accent-rose: #C97B84;
+    --text-primary: #F3EFE4;
+    --text-muted: #8B90B3;
+    --border: rgba(243,239,228,0.08);
+    --shadow-glow: 0 0 40px rgba(232,184,96,0.15);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text-primary); font-family:'Inter', sans-serif; height:100%; overflow-x:hidden;}
+  body{
+    background-image:
+      radial-gradient(1px 1px at 20px 30px, rgba(243,239,228,0.35), transparent),
+      radial-gradient(1px 1px at 120px 90px, rgba(243,239,228,0.25), transparent),
+      radial-gradient(1.5px 1.5px at 60px 160px, rgba(243,239,228,0.3), transparent),
+      radial-gradient(1px 1px at 200px 60px, rgba(243,239,228,0.2), transparent),
+      radial-gradient(1px 1px at 260px 200px, rgba(243,239,228,0.3), transparent),
+      radial-gradient(1.5px 1.5px at 320px 40px, rgba(243,239,228,0.25), transparent),
+      radial-gradient(1px 1px at 10px 220px, rgba(243,239,228,0.2), transparent);
+    background-repeat: repeat;
+    background-size: 340px 260px;
+  }
+  #app{max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative;}
+  header.topbar{
+    padding: max(22px, env(safe-area-inset-top)) 22px 14px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:center; gap:9px;}
+  .brand-mark{width:9px; height:9px; border-radius:50%; background:var(--accent-gold); box-shadow:0 0 12px 3px rgba(232,184,96,0.6);}
+  .brand-name{font-family:'Fraunces', serif; font-size:19px; font-weight:500; letter-spacing:0.2px;}
+  .streak-pill{
+    display:flex; align-items:center; gap:6px;
+    background:var(--bg-card); border:1px solid var(--border);
+    padding:6px 12px; border-radius:100px; font-size:13px; color:var(--text-muted);
+  }
+  .streak-pill b{color:var(--accent-gold); font-weight:600;}
+  main{flex:1; padding:6px 22px 110px;}
+  .view{display:none; animation: fade 0.35s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  /* TODAY VIEW */
+  .today-date-eyebrow{font-size:12.5px; text-transform:uppercase; letter-spacing:1.6px; color:var(--text-muted); margin:14px 0 2px;}
+  .today-date{font-family:'Fraunces', serif; font-size:34px; font-weight:500; line-height:1.15; margin:0 0 22px;}
+  .prompt-label{font-size:14.5px; color:var(--text-muted); margin-bottom:10px; font-style:italic; font-family:'Fraunces', serif;}
+  .name-edit-row{display:flex; gap:10px; margin-bottom:18px;}
+  .name-input{
+    flex:1; background:transparent; border:none; border-bottom:1px solid var(--border);
+    color:var(--accent-gold); font-family:'Inter'; font-weight:600; font-size:13.5px;
+    padding:4px 2px; outline:none;
+  }
+  .name-input:focus{border-color:var(--accent-gold);}
+  .person-label{font-size:11.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-muted); font-weight:600; margin-bottom:8px;}
+  textarea#entryTextA, textarea#entryTextB{
+    width:100%; min-height:100px; resize:vertical;
+    background:var(--bg-card); border:1px solid var(--border); border-radius:16px;
+    color:var(--text-primary); font-family:'Fraunces', serif; font-size:18px; line-height:1.55;
+    padding:18px; outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  textarea#entryTextA:focus, textarea#entryTextB:focus{border-color:var(--accent-gold-dim); box-shadow:0 0 0 3px rgba(232,184,96,0.1);}
+  textarea#entryTextA::placeholder, textarea#entryTextB::placeholder{color:#5C6088;}
+
+  .photo-row{margin-top:14px; display:flex; gap:12px; align-items:center;}
+  .photo-btn{
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+    padding:11px 16px; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;
+  }
+  .photo-btn svg{width:16px; height:16px; stroke:var(--accent-gold);}
+  .photo-thumb-wrap{position:relative; width:56px; height:56px; border-radius:12px; overflow:hidden; flex-shrink:0;}
+  .photo-thumb-wrap img{width:100%; height:100%; object-fit:cover;}
+  .photo-remove{
+    position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%;
+    background:rgba(20,23,44,0.85); color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center;
+    border:none; cursor:pointer;
+  }
+  #fileInput{display:none;}
+
+  .save-btn-wrap{margin-top:24px; display:flex; justify-content:center; position:relative;}
+  .save-btn-wrap::before{
+    content:''; position:absolute; width:200px; height:80px; top:-20px;
+    background:radial-gradient(circle, rgba(232,184,96,0.25), transparent 70%);
+    pointer-events:none;
+  }
+  .save-btn{
+    position:relative; z-index:1;
+    background:var(--accent-gold); color:#241B08; border:none; font-family:'Inter';
+    font-weight:600; font-size:15px; padding:15px 34px; border-radius:100px; cursor:pointer;
+    box-shadow:var(--shadow-glow); transition:transform 0.15s;
+  }
+  .save-btn:active{transform:scale(0.97);}
+  .save-btn:disabled{opacity:0.5;}
+
+  .saved-note{
+    margin-top:18px; text-align:center; font-size:13px; color:var(--text-muted);
+  }
+  .saved-note b{color:var(--accent-gold);}
+
+  .today-entry-card{
+    background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-top:6px;
+  }
+  .today-entry-card .txt{font-family:'Fraunces', serif; font-size:18px; line-height:1.6; white-space:pre-wrap;}
+  .today-entry-card img{width:100%; border-radius:12px; margin-top:14px; display:block;}
+  .edit-link{margin-top:14px; background:none; border:none; color:var(--accent-gold); font-size:13.5px; font-weight:600; cursor:pointer; padding:0;}
+
+  /* HISTORY VIEW */
+  .section-title{font-family:'Fraunces', serif; font-size:24px; font-weight:500; margin:14px 0 20px;}
+  .history-item{
+    display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--border);
+  }
+  .history-thumb{width:52px; height:52px; border-radius:10px; object-fit:cover; flex-shrink:0; background:var(--bg-card);}
+  .history-dot{width:8px; height:8px; border-radius:50%; background:var(--accent-gold); margin-top:6px; flex-shrink:0; box-shadow:0 0 8px 1px rgba(232,184,96,0.5);}
+  .history-body{flex:1; min-width:0;}
+  .history-date{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;}
+  .history-text{font-family:'Fraunces', serif; font-size:16px; line-height:1.45; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+
+  .empty-state{padding:50px 10px; text-align:center; color:var(--text-muted);}
+  .empty-state .glyph{font-size:26px; margin-bottom:10px; opacity:0.6;}
+  .empty-state p{font-family:'Fraunces', serif; font-size:17px; font-style:italic; line-height:1.5;}
+
+  /* SUMMARY VIEW */
+  .seg-control{display:flex; background:var(--bg-card); border-radius:12px; padding:4px; margin:14px 0 22px;}
+  .seg-btn{flex:1; text-align:center; padding:9px 0; border-radius:9px; font-size:13.5px; font-weight:600; color:var(--text-muted); cursor:pointer; border:none; background:none; font-family:'Inter';}
+  .seg-btn.active{background:var(--bg-card-raised); color:var(--text-primary);}
+
+  .period-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .period-nav .lbl{font-family:'Fraunces', serif; font-size:19px;}
+  .period-nav button{background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); width:34px; height:34px; border-radius:50%; font-size:16px; cursor:pointer;}
+
+  .stat-row{display:flex; gap:12px; margin-bottom:22px;}
+  .stat-box{flex:1; background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:16px;}
+  .stat-num{font-family:'Fraunces', serif; font-size:26px; color:var(--accent-gold);}
+  .stat-lbl{font-size:12px; color:var(--text-muted); margin-top:2px;}
+
+  .constellation{display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:24px;}
+  .const-dow{font-size:10px; text-align:center; color:var(--text-muted); text-transform:uppercase;}
+  .const-day{
+    aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:var(--text-muted); background:rgba(243,239,228,0.04); border:1px solid transparent; cursor:default;
+  }
+  .const-day.lit{background:var(--accent-gold); color:#241B08; font-weight:700; box-shadow:0 0 10px 1px rgba(232,184,96,0.45); cursor:pointer;}
+  .const-day.today-ring{border-color:var(--accent-rose);}
+  .const-day.empty{visibility:hidden;}
+
+  .reflect-btn{
+    width:100%; background:var(--bg-card); border:1px solid var(--accent-gold-dim); color:var(--accent-gold);
+    padding:14px; border-radius:14px; font-weight:600; font-size:14.5px; cursor:pointer; margin-bottom:16px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .reflect-card{
+    background:linear-gradient(160deg, var(--bg-card-raised), var(--bg-card));
+    border:1px solid var(--border); border-radius:16px; padding:22px; margin-bottom:20px;
+  }
+  .reflect-card .txt{font-family:'Fraunces', serif; font-style:italic; font-size:17px; line-height:1.65; color:var(--text-primary);}
+  .reflect-loading{display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:14px; padding:8px 0;}
+  .spinner{width:14px; height:14px; border-radius:50%; border:2px solid var(--accent-gold-dim); border-top-color:var(--accent-gold); animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* DETAIL OVERLAY */
+  .overlay{position:fixed; inset:0; background:rgba(10,11,22,0.7); backdrop-filter:blur(6px); display:none; align-items:flex-end; z-index:50;}
+  .overlay.active{display:flex;}
+  .overlay-sheet{
+    background:var(--bg-card-raised); width:100%; max-width:480px; margin:0 auto; border-radius:24px 24px 0 0;
+    padding:26px 22px max(26px, env(safe-area-inset-bottom)); max-height:82vh; overflow-y:auto;
+  }
+  .overlay-handle{width:36px; height:4px; background:var(--border); border-radius:4px; margin:0 auto 18px;}
+  .overlay-sheet .date-lbl{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;}
+  .overlay-sheet img{width:100%; border-radius:14px; margin-bottom:16px; display:block;}
+  .overlay-sheet .txt{font-family:'Fraunces', serif; font-size:19px; line-height:1.6; white-space:pre-wrap;}
+  .overlay-close{margin-top:20px; width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); padding:13px; border-radius:12px; font-weight:600; cursor:pointer;}
+
+  /* TAB BAR */
+  nav.tabbar{
+    position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto;
+    background:rgba(30,34,66,0.92); backdrop-filter:blur(14px);
+    border-top:1px solid var(--border);
+    display:flex; padding: 8px 10px max(10px, env(safe-area-inset-bottom));
+  }
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:var(--text-muted); font-family:'Inter'; font-size:11px; font-weight:600; padding:6px 0; cursor:pointer;}
+  .tab svg{width:21px; height:21px; stroke:var(--text-muted); fill:none; stroke-width:1.7;}
+  .tab.active{color:var(--accent-gold);}
+  .tab.active svg{stroke:var(--accent-gold);}
+
+  ::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark"></span><span class="brand-name">Nightly Thanks</span></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="backupOpenBtn" aria-label="Backup and restore" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer;">↥</button>
+      <div class="streak-pill" id="streakPill">&#9733; <b id="streakNum">0</b>&nbsp;night streak</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- TODAY -->
+    <section class="view active" id="view-today">
+      <div class="today-date-eyebrow" id="todayEyebrow">—</div>
+      <h1 class="today-date" id="todayDate">—</h1>
+      <div id="todayContent"></div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view" id="view-history">
+      <h2 class="section-title">Every night, kept</h2>
+      <div id="historyList"></div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section class="view" id="view-summary">
+      <h2 class="section-title">Looking back</h2>
+      <div class="seg-control" id="periodSeg">
+        <button class="seg-btn active" data-period="week">Week</button>
+        <button class="seg-btn" data-period="month">Month</button>
+        <button class="seg-btn" data-period="year">Year</button>
+      </div>
+      <div id="summaryContent"></div>
+    </section>
+  </main>
+
+
+  <div class="overlay" id="backupOverlay">
+    <div class="overlay-sheet">
+      <div class="overlay-handle"></div>
+      <div class="date-lbl">BACKUP &amp; RESTORE</div>
+      <div class="txt" style="font-family:'Inter';font-size:15px;line-height:1.5;">
+        Your entries and photos are stored only on this iPhone. Create a backup regularly so you can restore them if Safari data is cleared.
+      </div>
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px;">
+        <button class="overlay-close" id="exportBackupBtn" style="color:var(--accent-gold);border-color:var(--accent-gold-dim);">Export backup</button>
+        <button class="overlay-close" id="importBackupBtn">Import backup</button>
+        <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;">
+        <button class="overlay-close" id="backupClose">Close</button>
+      </div>
+      <div id="backupStatus" style="margin-top:12px;text-align:center;font-size:12px;color:var(--text-muted);"></div>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab active" data-view="today">
+      <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="4"/></svg>
+      Tonight
+    </button>
+    <button class="tab" data-view="history">
+      <svg viewBox="0 0 24 24"><path d="M4 4v16l4-3 4 3 4-3 4 3V4a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1z"/></svg>
+      History
+    </button>
+    <button class="tab" data-view="summary">
+      <svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.9L21 9.3l-5.5 4.3L17 21l-5-3.8L7 21l1.5-7.4L3 9.3l6.6-.4z"/></svg>
+      Summary
+    </button>
+  </nav>
+</div>
+
+<div class="overlay" id="detailOverlay">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div class="date-lbl" id="detailDate"></div>
+    <img id="detailImg" style="display:none;">
+    <div class="txt" id="detailTxt"></div>
+    <button class="overlay-close" id="detailClose">Close</button>
+  </div>
+</div>
+
+<script>
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const monthCache = {};
+let pendingPhoto = null;
+let settings = { nameA: 'Me', nameB: 'Him' };
+
+async function loadSettings(){
+  try{
+    const value = localStorage.getItem('nightly-thanks-settings');
+    if(value) settings = { ...settings, ...JSON.parse(value) };
+  }catch(e){ /* no settings saved yet, use defaults */ }
+}
+async function saveSettings(){
+  localStorage.setItem('nightly-thanks-settings', JSON.stringify(settings));
+}
+// Normalizes an entry so old single-field notes still display fine.
+function fieldsOf(entry){
+  if(!entry) return { a:'', b:'' };
+  if(entry.textA !== undefined || entry.textB !== undefined){
+    return { a: entry.textA || '', b: entry.textB || '' };
+  }
+  return { a: entry.text || '', b: '' }; // legacy single-note entries
+}
+
+function pad(n){return String(n).padStart(2,'0');}
+function ymd(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+function monthKeyOf(d){return `month:${d.getFullYear()}-${pad(d.getMonth()+1)}`;}
+function todayDate(){return new Date();}
+
+async function loadMonth(monthKey){
+  if(monthCache[monthKey]) return monthCache[monthKey];
+  try{
+    const value = localStorage.getItem('nightly-thanks-' + monthKey);
+    monthCache[monthKey] = value ? JSON.parse(value) : {};
+  }catch(e){
+    monthCache[monthKey] = {};
+  }
+  return monthCache[monthKey];
+}
+async function saveMonth(monthKey, data){
+  monthCache[monthKey] = data;
+  localStorage.setItem('nightly-thanks-' + monthKey, JSON.stringify(data));
+}
+async function saveEntry(date, entry){
+  const mk = monthKeyOf(date);
+  const data = await loadMonth(mk);
+  data[pad(date.getDate())] = entry;
+  await saveMonth(mk, data);
+}
+async function getEntry(date){
+  const mk = monthKeyOf(date);
+  const data = await loadMonth(mk);
+  return data[pad(date.getDate())] || null;
+}
+async function listAllMonthKeys(){
+  const prefix = 'nightly-thanks-month:';
+  const keys = [];
+  for(let i=0; i<localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith(prefix)) keys.push(key.slice('nightly-thanks-'.length));
+  }
+  return keys.sort().reverse();
+}
+
+function resizeImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if(w > h && w > maxDim){ h = h*maxDim/w; w = maxDim; }
+      else if(h >= w && h > maxDim){ w = w*maxDim/h; h = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------- TAB / VIEW SWITCHING ---------- */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchView(btn.dataset.view));
+});
+function switchView(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===name));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+name));
+  if(name==='history') renderHistory();
+  if(name==='summary') renderSummary();
+}
+
+/* ---------- TODAY VIEW ---------- */
+async function renderToday(){
+  const d = todayDate();
+  document.getElementById('todayEyebrow').textContent = DOW[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
+  document.getElementById('todayDate').textContent = 'What are you grateful for tonight?';
+  const existing = await getEntry(d);
+  const wrap = document.getElementById('todayContent');
+  const f = fieldsOf(existing);
+  if(existing && !window.__forceEdit){
+    wrap.innerHTML = `
+      <div class="today-entry-card">
+        <div class="person-label">${escapeHtml(settings.nameA)}</div>
+        <div class="txt" id="viewTxtA"></div>
+        ${f.b ? `<div class="person-label" style="margin-top:16px;">${escapeHtml(settings.nameB)}</div><div class="txt" id="viewTxtB"></div>` : ''}
+        ${existing.photo ? `<img src="${existing.photo}">` : ''}
+      </div>
+      <div style="text-align:center;"><button class="edit-link" id="editTodayBtn">Edit tonight's note</button></div>
+    `;
+    document.getElementById('viewTxtA').textContent = f.a;
+    if(f.b) document.getElementById('viewTxtB').textContent = f.b;
+    document.getElementById('editTodayBtn').addEventListener('click', ()=>{ window.__forceEdit = true; renderToday(); });
+  } else {
+    pendingPhoto = existing ? existing.photo : null;
+    wrap.innerHTML = `
+      <div class="prompt-label">Small or big, name a moment worth keeping.</div>
+      <div class="name-edit-row">
+        <input type="text" class="name-input" id="nameAInput" value="${escapeHtml(settings.nameA)}" placeholder="Your name">
+        <input type="text" class="name-input" id="nameBInput" value="${escapeHtml(settings.nameB)}" placeholder="Their name">
+      </div>
+      <div class="person-label">${escapeHtml(settings.nameA)}'s thanks</div>
+      <textarea id="entryTextA" placeholder="Tonight I'm grateful for...">${f.a}</textarea>
+      <div class="person-label" style="margin-top:16px;">${escapeHtml(settings.nameB)}'s thanks</div>
+      <textarea id="entryTextB" placeholder="Tonight I'm grateful for...">${f.b}</textarea>
+      <div class="photo-row" id="photoRow">
+        <button class="photo-btn" id="addPhotoBtn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.2"/><path d="M9 6l1-2h4l1 2"/></svg>Add a photo</button>
+        <input type="file" id="fileInput" accept="image/*" capture="environment">
+      </div>
+      <div class="save-btn-wrap"><button class="save-btn" id="saveBtn">Save tonight's thanks</button></div>
+    `;
+    if(pendingPhoto) showPhotoThumb(pendingPhoto);
+    document.getElementById('nameAInput').addEventListener('change', async (e)=>{
+      settings.nameA = e.target.value.trim() || 'Me';
+      await saveSettings();
+      document.querySelectorAll('.person-label')[0].textContent = settings.nameA + "'s thanks";
+    });
+    document.getElementById('nameBInput').addEventListener('change', async (e)=>{
+      settings.nameB = e.target.value.trim() || 'Him';
+      await saveSettings();
+      document.querySelectorAll('.person-label')[1].textContent = settings.nameB + "'s thanks";
+    });
+    document.getElementById('addPhotoBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      pendingPhoto = await resizeImage(file, 900, 0.72);
+      showPhotoThumb(pendingPhoto);
+    });
+    document.getElementById('saveBtn').addEventListener('click', onSave);
+  }
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showPhotoThumb(dataUrl){
+  const row = document.getElementById('photoRow');
+  row.innerHTML = `
+    <div class="photo-thumb-wrap"><img src="${dataUrl}"><button class="photo-remove" id="removePhotoBtn">&times;</button></div>
+    <span style="font-size:13px; color:var(--text-muted);">Photo attached</span>
+  `;
+  document.getElementById('removePhotoBtn').addEventListener('click', ()=>{ pendingPhoto = null; renderToday(); });
+}
+async function onSave(){
+  const textA = document.getElementById('entryTextA').value.trim();
+  const textB = document.getElementById('entryTextB').value.trim();
+  if(!textA && !textB){ document.getElementById('entryTextA').focus(); return; }
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const d = todayDate();
+  await saveEntry(d, { textA, textB, photo: pendingPhoto || null, ts: Date.now() });
+  window.__forceEdit = false;
+  await renderToday();
+  await updateStreak();
+}
+
+/* ---------- STREAK ---------- */
+async function updateStreak(){
+  let streak = 0;
+  let cursor = todayDate();
+  // walk backward day by day until a gap is found
+  for(let i=0; i<3650; i++){
+    const e = await getEntry(cursor);
+    if(e){ streak++; cursor.setDate(cursor.getDate()-1); }
+    else {
+      // allow "today not yet written" to not break an existing streak ending yesterday
+      if(i===0){ cursor.setDate(cursor.getDate()-1); continue; }
+      break;
+    }
+  }
+  document.getElementById('streakNum').textContent = streak;
+}
+
+/* ---------- HISTORY VIEW ---------- */
+async function renderHistory(){
+  const list = document.getElementById('historyList');
+  list.innerHTML = `<div class="reflect-loading"><div class="spinner"></div>Gathering your nights...</div>`;
+  const keys = await listAllMonthKeys();
+  const entries = [];
+  for(const k of keys){
+    const data = await loadMonth(k);
+    const [_, ym] = k.split(':');
+    const [y,m] = ym.split('-');
+    Object.keys(data).sort().reverse().forEach(day=>{
+      entries.push({ date: new Date(y, m-1, day), ...data[day] });
+    });
+  }
+  entries.sort((a,b)=> b.date - a.date);
+  if(entries.length===0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#9734;</div><p>No nights recorded yet.<br>Tonight's a good place to start.</p></div>`;
+    return;
+  }
+  list.innerHTML = entries.map((e,i)=>`
+    <div class="history-item" data-idx="${i}">
+      ${e.photo ? `<img class="history-thumb" src="${e.photo}">` : `<div class="history-dot"></div>`}
+      <div class="history-body">
+        <div class="history-date">${DOW[e.date.getDay()]}, ${MONTHS[e.date.getMonth()]} ${e.date.getDate()}${e.date.getFullYear()!==todayDate().getFullYear() ? ', '+e.date.getFullYear() : ''}</div>
+        <div class="history-text"></div>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.history-text').forEach((el,i)=>{
+    const f = fieldsOf(entries[i]);
+    const parts = [];
+    if(f.a) parts.push(`${settings.nameA}: ${f.a}`);
+    if(f.b) parts.push(`${settings.nameB}: ${f.b}`);
+    el.textContent = parts.join('  ·  ');
+  });
+  list.querySelectorAll('.history-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const e = entries[item.dataset.idx];
+      openDetail(e);
+    });
+  });
+}
+function openDetail(e){
+  document.getElementById('detailDate').textContent = `${DOW[e.date.getDay()]}, ${MONTHS[e.date.getMonth()]} ${e.date.getDate()}, ${e.date.getFullYear()}`;
+  const f = fieldsOf(e);
+  const txtEl = document.getElementById('detailTxt');
+  txtEl.innerHTML = '';
+  if(f.a){
+    const lbl = document.createElement('div'); lbl.className = 'person-label'; lbl.textContent = settings.nameA;
+    const body = document.createElement('div'); body.className = 'txt'; body.style.marginBottom = '14px'; body.textContent = f.a;
+    txtEl.appendChild(lbl); txtEl.appendChild(body);
+  }
+  if(f.b){
+    const lbl = document.createElement('div'); lbl.className = 'person-label'; lbl.textContent = settings.nameB;
+    const body = document.createElement('div'); body.className = 'txt'; body.textContent = f.b;
+    txtEl.appendChild(lbl); txtEl.appendChild(body);
+  }
+  const img = document.getElementById('detailImg');
+  if(e.photo){ img.src = e.photo; img.style.display='block'; } else { img.style.display='none'; }
+  document.getElementById('detailOverlay').classList.add('active');
+}
+document.getElementById('detailClose').addEventListener('click', ()=> document.getElementById('detailOverlay').classList.remove('active'));
+document.getElementById('detailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='detailOverlay') e.currentTarget.classList.remove('active'); });
+
+/* ---------- SUMMARY VIEW ---------- */
+let currentPeriod = 'week';
+let viewMonthDate = new Date();
+let viewYear = todayDate().getFullYear();
+
+document.querySelectorAll('#periodSeg .seg-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#periodSeg .seg-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    renderSummary();
+  });
+});
+
+async function renderSummary(){
+  const el = document.getElementById('summaryContent');
+  el.innerHTML = `<div class="reflect-loading"><div class="spinner"></div>Loading...</div>`;
+  if(currentPeriod==='week') return renderWeekSummary();
+  if(currentPeriod==='month') return renderMonthSummary();
+  if(currentPeriod==='year') return renderYearSummary();
+}
+
+async function collectEntriesInRange(start, end){
+  const out = [];
+  let cursor = new Date(start);
+  const seenMonths = new Set();
+  while(cursor <= end){
+    seenMonths.add(monthKeyOf(cursor));
+    cursor.setDate(cursor.getDate()+1);
+  }
+  for(const mk of seenMonths) await loadMonth(mk);
+  cursor = new Date(start);
+  while(cursor <= end){
+    const e = await getEntry(cursor);
+    if(e) out.push({ date: new Date(cursor), ...e });
+    cursor.setDate(cursor.getDate()+1);
+  }
+  return out;
+}
+
+async function renderWeekSummary(){
+  const end = todayDate();
+  const start = new Date(end); start.setDate(start.getDate()-6);
+  const entries = await collectEntriesInRange(start, end);
+  const el = document.getElementById('summaryContent');
+  el.innerHTML = `
+    <div class="period-nav"><span></span><span class="lbl">Last 7 nights</span><span></span></div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num">${entries.length}</div><div class="stat-lbl">nights logged</div></div>
+      <div class="stat-box"><div class="stat-num">${entries.filter(e=>e.photo).length}</div><div class="stat-lbl">with a photo</div></div>
+    </div>
+    <button class="reflect-btn" id="reflectBtn">&#10022; Reflect on this week</button>
+    <div id="reflectSlot"></div>
+  `;
+  wireReflectBtn(entries, 'week', `the last 7 nights`);
+}
+
+async function renderMonthSummary(){
+  const y = viewMonthDate.getFullYear(), m = viewMonthDate.getMonth();
+  const data = await loadMonth(`month:${y}-${pad(m+1)}`);
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const firstDow = new Date(y, m, 1).getDay();
+  const t = todayDate();
+  let cells = '';
+  DOW.forEach(d=> cells += `<div class="const-dow">${d[0]}</div>`);
+  for(let i=0;i<firstDow;i++) cells += `<div class="const-day empty"></div>`;
+  const entries = [];
+  for(let day=1; day<=daysInMonth; day++){
+    const key = pad(day);
+    const lit = !!data[key];
+    const isToday = (y===t.getFullYear() && m===t.getMonth() && day===t.getDate());
+    if(lit) entries.push({ date: new Date(y,m,day), ...data[key] });
+    cells += `<div class="const-day ${lit?'lit':''} ${isToday?'today-ring':''}" data-day="${day}">${day}</div>`;
+  }
+  const el = document.getElementById('summaryContent');
+  el.innerHTML = `
+    <div class="period-nav">
+      <button id="prevMonth">&larr;</button>
+      <span class="lbl">${MONTHS[m]} ${y}</span>
+      <button id="nextMonth">&rarr;</button>
+    </div>
+    <div class="constellation">${cells}</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num">${entries.length}</div><div class="stat-lbl">nights this month</div></div>
+      <div class="stat-box"><div class="stat-num">${daysInMonth}</div><div class="stat-lbl">nights possible</div></div>
+    </div>
+    <button class="reflect-btn" id="reflectBtn">&#10022; Reflect on this month</button>
+    <div id="reflectSlot"></div>
+  `;
+  document.getElementById('prevMonth').addEventListener('click', ()=>{ viewMonthDate = new Date(y, m-1, 1); renderMonthSummary(); });
+  document.getElementById('nextMonth').addEventListener('click', ()=>{ viewMonthDate = new Date(y, m+1, 1); renderMonthSummary(); });
+  el.querySelectorAll('.const-day.lit').forEach(cell=>{
+    cell.addEventListener('click', ()=>{
+      const day = parseInt(cell.dataset.day);
+      const e = entries.find(en=> en.date.getDate()===day);
+      if(e) openDetail(e);
+    });
+  });
+  wireReflectBtn(entries, 'month', `${MONTHS[m]} ${y}`);
+}
+
+async function renderYearSummary(){
+  const keys = [];
+  for(let m=0;m<12;m++) keys.push(`month:${viewYear}-${pad(m+1)}`);
+  let entries = [];
+  for(const k of keys){
+    const data = await loadMonth(k);
+    const [_, ym] = k.split(':');
+    const [y,m] = ym.split('-');
+    Object.keys(data).forEach(day=> entries.push({ date: new Date(y, m-1, day), ...data[day] }));
+  }
+  entries.sort((a,b)=>a.date-b.date);
+  // longest streak within year (simple approximation)
+  let longest=0, cur=0, prevTime=null;
+  entries.forEach(e=>{
+    if(prevTime!==null && (e.date - prevTime)/86400000 === 1) cur++; else cur=1;
+    longest = Math.max(longest, cur);
+    prevTime = e.date;
+  });
+  const monthCounts = new Array(12).fill(0);
+  entries.forEach(e=> monthCounts[e.date.getMonth()]++);
+  const maxCount = Math.max(1, ...monthCounts);
+  const el = document.getElementById('summaryContent');
+  el.innerHTML = `
+    <div class="period-nav">
+      <button id="prevYear">&larr;</button>
+      <span class="lbl">${viewYear}</span>
+      <button id="nextYear">&rarr;</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num">${entries.length}</div><div class="stat-lbl">nights this year</div></div>
+      <div class="stat-box"><div class="stat-num">${longest}</div><div class="stat-lbl">longest streak</div></div>
+    </div>
+    <div style="display:flex; align-items:flex-end; gap:6px; height:90px; margin-bottom:24px;">
+      ${monthCounts.map((c,i)=>`
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+          <div style="width:100%; height:${Math.max(4,(c/maxCount)*70)}px; background:${c>0?'var(--accent-gold)':'rgba(243,239,228,0.06)'}; border-radius:4px 4px 2px 2px;"></div>
+          <span style="font-size:9px; color:var(--text-muted);">${MONTHS[i][0]}</span>
+        </div>
+      `).join('')}
+    </div>
+    <button class="reflect-btn" id="reflectBtn">&#10022; Reflect on this year</button>
+    <div id="reflectSlot"></div>
+  `;
+  document.getElementById('prevYear').addEventListener('click', ()=>{ viewYear--; renderYearSummary(); });
+  document.getElementById('nextYear').addEventListener('click', ()=>{ viewYear++; renderYearSummary(); });
+  wireReflectBtn(entries, 'year', `${viewYear}`);
+}
+
+function wireReflectBtn(entries, period, labelForPrompt){
+  const btn = document.getElementById('reflectBtn');
+  if(entries.length===0){
+    btn.disabled = true;
+    btn.style.opacity = 0.4;
+    btn.textContent = 'Log a few nights to unlock a reflection';
+    return;
+  }
+  btn.addEventListener('click', async ()=>{
+    const slot = document.getElementById('reflectSlot');
+    slot.innerHTML = `<div class="reflect-loading"><div class="spinner"></div>Reading back through your nights...</div>`;
+    btn.disabled = true;
+    try{
+      const summary = await generateReflection(entries, labelForPrompt);
+      slot.innerHTML = `<div class="reflect-card"><div class="txt"></div></div>`;
+      slot.querySelector('.txt').textContent = summary;
+    }catch(err){
+      slot.innerHTML = `<div class="reflect-card"><div class="txt" style="font-style:normal; color:var(--text-muted); font-family:'Inter';">Couldn't generate a reflection right now. Try again in a moment.</div></div>`;
+    }
+    btn.disabled = false;
+  }, { once:true });
+}
+
+async function generateReflection(entries, labelForPrompt){
+  // This iPhone-only version keeps all journal data local.
+  // AI reflection requires a secure server/API key, so it is intentionally
+  // unavailable in the standalone offline version.
+  return `Your ${labelForPrompt} holds ${entries.length} logged night${entries.length === 1 ? '' : 's'}. Keep noticing the small moments that made the days feel worth remembering.`;
+}
+
+
+/* ---------- LOCAL BACKUP / RESTORE ---------- */
+function collectLocalBackup(){
+  const data = {
+    format: "nightly-thanks-backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    settings: JSON.parse(localStorage.getItem('nightly-thanks-settings') || '{"nameA":"Me","nameB":"Him"}'),
+    months: {}
+  };
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith('nightly-thanks-month:')){
+      const monthKey = key.slice('nightly-thanks-'.length);
+      try { data.months[monthKey] = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+    }
+  }
+  return data;
+}
+
+function downloadBackup(){
+  const backup = collectLocalBackup();
+  const blob = new Blob([JSON.stringify(backup)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `nightly-thanks-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  document.getElementById('backupStatus').textContent = 'Backup created. Save the JSON file somewhere safe.';
+}
+
+function restoreBackup(file){
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(data.format !== 'nightly-thanks-backup' || !data.months || !data.settings) throw new Error('Invalid backup');
+      if(!confirm('Restore this backup? Existing entries with the same dates will be replaced.')) return;
+
+      localStorage.setItem('nightly-thanks-settings', JSON.stringify(data.settings));
+      Object.entries(data.months).forEach(([monthKey, monthData])=>{
+        localStorage.setItem('nightly-thanks-' + monthKey, JSON.stringify(monthData));
+        monthCache[monthKey] = monthData;
+      });
+
+      settings = {...settings, ...data.settings};
+      window.__forceEdit = false;
+      await renderToday();
+      await updateStreak();
+      document.getElementById('backupStatus').textContent = 'Backup restored successfully.';
+    }catch(err){
+      document.getElementById('backupStatus').textContent = 'That file is not a valid Nightly Thanks backup.';
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('backupOpenBtn').addEventListener('click', ()=>{
+  document.getElementById('backupOverlay').classList.add('active');
+  document.getElementById('backupStatus').textContent = '';
+});
+document.getElementById('backupClose').addEventListener('click', ()=>{
+  document.getElementById('backupOverlay').classList.remove('active');
+});
+document.getElementById('backupOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'backupOverlay') e.currentTarget.classList.remove('active');
+});
+document.getElementById('exportBackupBtn').addEventListener('click', downloadBackup);
+document.getElementById('importBackupBtn').addEventListener('click', ()=>{
+  document.getElementById('backupFileInput').click();
+});
+document.getElementById('backupFileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(file) restoreBackup(file);
+  e.target.value = '';
+});
+
+/* ---------- INIT ---------- */
+(async function init(){
+  await loadSettings();
+  await renderToday();
+  await updateStreak();
+})();
+</script>
+<!-- iPhone standalone version: data is stored locally on this device. -->
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+</script>
+</body>
+</html>

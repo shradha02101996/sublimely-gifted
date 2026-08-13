@@ -1,0 +1,10 @@
+{
+  "name": "Nightly Thanks",
+  "short_name": "Nightly Thanks",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#14172C",
+  "theme_color": "#14172C",
+  "orientation": "portrait",
+  "icons": []
+}
