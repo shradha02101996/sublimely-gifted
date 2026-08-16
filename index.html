@@ -204,13 +204,16 @@
 
   ::-webkit-scrollbar{display:none;}
 
+/* ---------- VISUAL GRATITUDE REFLECTIONS ---------- */
 .gratitude-visual{margin-top:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:18px 16px 20px;}
 .gratitude-visual .visual-kicker{font-size:10px;letter-spacing:.14em;color:var(--accent-gold);font-weight:600;text-transform:uppercase;margin-bottom:6px;}
 .gratitude-visual h3{font-family:'Fraunces',serif;font-size:22px;font-weight:500;margin:0 0 5px;color:var(--text-primary);}
 .gratitude-visual .visual-sub{font-size:12px;color:var(--text-muted);line-height:1.45;margin-bottom:16px;}
-.theme-row{margin:11px 0}.theme-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}.theme-name{color:var(--text-primary)}.theme-count{color:var(--text-muted);font-size:11px}.theme-track{height:7px;border-radius:99px;background:rgba(243,239,228,.07);overflow:hidden}.theme-fill{height:100%;border-radius:99px;background:var(--accent-gold);opacity:.9}
+.theme-row{margin:11px 0}.theme-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px}.theme-name{color:var(--text-primary)}.theme-count{color:var(--text-muted);font-size:11px}.theme-track{height:7px;border-radius:99px;background:rgba(243,239,228,.07);overflow:hidden}.theme-fill{height:100%;border-radius:99px;background:var(--accent-gold);opacity:.9}
 .word-cloud{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:7px 9px;padding:12px 4px 4px}.cloud-word{display:inline-block;color:var(--text-primary);line-height:1;font-family:'Fraunces',serif}.visual-note{font-size:11px;color:var(--text-muted);text-align:center;margin-top:12px;line-height:1.4}
 
+/* flexible dates + speech */
+.entry-date-tools{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 14px}.entry-date-tools button{border:0;background:transparent;color:var(--text-primary);font-size:22px;padding:6px 10px}.entry-date-tools input[type=date]{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text-primary);padding:8px 10px;font-family:inherit;font-size:13px}.date-nav-note{text-align:center;font-size:11px;color:var(--text-muted);margin:-5px 0 12px}.speech-wrap{display:flex;justify-content:flex-end;margin-top:6px}.speech-btn{border:1px solid var(--border);background:transparent;color:var(--text-muted);border-radius:999px;padding:7px 11px;font-size:11px}.speech-btn.listening{color:var(--accent-gold);border-color:var(--accent-gold)}.speech-status{text-align:right;font-size:10px;color:var(--text-muted);min-height:13px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -705,10 +708,10 @@ async function renderYearSummary(){
 }
 
 
-/* ---------- GRATITUDE VISUAL INSIGHTS ---------- */
+/* ---------- VISUAL GRATITUDE INSIGHTS ---------- */
 function gratitudeVisual(entries){
   const themes=[
-    {name:'Love & each other',words:['love','loved','loving','baby','babe','biyuu','biyu','husband','wife','partner','kiss','kisses','cuddle','cuddles','snuggle','hug','hugs','together','us','each other','understanding','support','care','cared','kind','sweet','sweetly','miss','missing']},
+    {name:'Love & each other',words:['love','loved','loving','baby','babe','biyuu','biyu','husband','wife','partner','kiss','kisses','cuddle','cuddles','snuggle','hug','hugs','together','us','you','each other','understanding','support','care','cared','kind','sweet','sweetly','miss','missing']},
     {name:'Little moments',words:['smile','laugh','laughed','laughing','funny','joke','jokes','surprise','unexpected','cute','cutely','moment','moments','song','singing','dance','dancing','call','called','message','text','note']},
     {name:'Food & treats',words:['food','dinner','lunch','breakfast','coffee','tea','chai','cake','chocolate','dessert','ice cream','pizza','pasta','meal','cook','cooked','cooking','restaurant','eat','eating','snack']},
     {name:'Home & comfort',words:['home','house','bed','sleep','sleeping','night','morning','cozy','comfortable','comfort','rest','rested','room','blanket','pillow','shower','bath']},
@@ -718,13 +721,15 @@ function gratitudeVisual(entries){
     {name:'Health & wellbeing',words:['health','healthy','walk','walking','exercise','workout','doctor','better','healing','strong','energy','calm','peace','peaceful','relax','relaxed','rest']},
     {name:'Nature & everyday beauty',words:['sun','sunset','sunrise','rain','rainy','sky','moon','stars','star','flower','flowers','tree','trees','weather','beautiful','beauty','light','garden','nature']}
   ];
-  const texts=[]; entries.forEach(e=>{const f=fieldsOf(e);if(f.a)texts.push(f.a);if(f.b)texts.push(f.b)});
+  const texts=[];
+  entries.forEach(e=>{const f=fieldsOf(e);if(f.a)texts.push(f.a);if(f.b)texts.push(f.b)});
   const corpus=texts.join(' ').toLowerCase();
   const counts=themes.map(theme=>{
     let count=0;
     theme.words.forEach(w=>{
       const q=w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      const m=corpus.match(new RegExp('(?:^|\\b)'+q+'(?:\\b|$)','gi')); count+=m?m.length:0;
+      const m=corpus.match(new RegExp('(?:^|\\b)'+q+'(?:\\b|$)','gi'));
+      count+=m?m.length:0;
     });
     return {...theme,count};
   }).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
@@ -732,11 +737,12 @@ function gratitudeVisual(entries){
   const stop=new Set('the and for that with this was were you your our are to of in on a an is it me my i we he she him her his has have had from with but not just very so too as at by be been being tonight today thank thanks thankful grateful gratitude'.split(' '));
   const words=corpus.replace(/[^a-z0-9' -]/g,' ').split(/\s+/).filter(w=>w.length>=4&&!stop.has(w));
   const freq={}; words.forEach(w=>{if(/^[a-z]+$/.test(w))freq[w]=(freq[w]||0)+1});
-  const cloud=Object.entries(freq).filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]).slice(0,18), maxW=Math.max(1,...cloud.map(x=>x[1]));
-  return `<div class="gratitude-visual"><div class="visual-kicker">A little picture of your gratitude</div><h3>What you were thankful for</h3><div class="visual-sub">Based only on the words in these entries. Bigger bars mean a theme appeared more often.</div>
-  ${top.length?top.map(x=>`<div class="theme-row"><div class="theme-head"><span class="theme-name">${escapeHtml(x.name)}</span><span class="theme-count">${x.count}</span></div><div class="theme-track"><div class="theme-fill" style="width:${Math.round(x.count/max*100)}%"></div></div></div>`).join(''):'<div class="visual-note">Keep writing — your themes will start to appear here.</div>'}
+  const cloud=Object.entries(freq).filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]).slice(0,18);
+  const maxW=Math.max(1,...cloud.map(x=>x[1]));
+  return `<div class="gratitude-visual"><div class="visual-kicker">A little picture of your gratitude</div><h3>What were you thankful for?</h3><div class="visual-sub">A local visual summary of the words and themes that appeared most often in your selected nights.</div>
+  ${top.length?top.map(x=>`<div class="theme-row"><div class="theme-head"><span class="theme-name">${escapeHtml(x.name)}</span><span class="theme-count">${x.count}</span></div><div class="theme-track"><div class="theme-fill" style="width:${Math.round(x.count/max*100)}%"></div></div></div>`).join(''):'<div class="visual-note">Keep writing — your gratitude themes will appear here.</div>'}
   ${cloud.length?`<div class="date-lbl" style="margin-top:20px;">WORDS THAT KEPT COMING BACK</div><div class="word-cloud">${cloud.map(([w,n])=>`<span class="cloud-word" style="font-size:${13+Math.round(n/maxW*13)}px;opacity:${0.58+n/maxW*.38}">${escapeHtml(w)}</span>`).join('')}</div>`:''}
-  <div class="visual-note">This pattern-finder runs locally on your iPhone — nothing is sent anywhere.</div></div>`;
+  <div class="visual-note">This analysis runs locally on your iPhone.</div></div>`;
 }
 
 function wireReflectBtn(entries, period, labelForPrompt){
@@ -859,6 +865,54 @@ document.getElementById('backupFileInput').addEventListener('change', e=>{
 <!-- iPhone standalone version: data is stored locally on this device. -->
 <script>
 if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+</script>
+
+<script>
+(function(){
+const pad=n=>String(n).padStart(2,'0'), iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+function addDatePicker(){
+ if(document.getElementById('nt-flex-date')) return;
+ const tas=[...document.querySelectorAll('textarea')]; if(!tas.length)return;
+ const host=tas[0].closest('form')||tas[0].parentElement?.parentElement||tas[0].parentElement; if(!host)return;
+ const today=iso(new Date()), bar=document.createElement('div'); bar.id='nt-flex-date'; bar.className='entry-date-tools';
+ bar.innerHTML='<button type="button" id="nt-prev">‹</button><input id="nt-date" type="date" value="'+today+'"><button type="button" id="nt-next">›</button>';
+ const note=document.createElement('div');note.id='nt-date-note';note.className='date-nav-note';note.textContent='You can write or edit an entry for any date.';
+ host.insertBefore(note,host.firstChild);host.insertBefore(bar,note.nextSibling);
+ const input=bar.querySelector('#nt-date');
+ function change(){
+   const v=input.value; window.selectedDate=v;
+   // Support apps that expose a date renderer.
+   if(typeof window.renderEntryForDate==='function'){try{window.renderEntryForDate(v)}catch(e){}}
+   // Sync an existing date input, if the app has one.
+   [...document.querySelectorAll('input[type=date]')].filter(x=>x!==input).forEach(x=>{try{x.value=v;x.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}});
+   const d=new Date(v+'T12:00:00'); note.textContent=(v===today)?'Today':'Editing '+d.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'});
+ }
+ input.onchange=change;
+ bar.querySelector('#nt-prev').onclick=()=>{let d=new Date(input.value+'T12:00:00');d.setDate(d.getDate()-1);input.value=iso(d);change()};
+ bar.querySelector('#nt-next').onclick=()=>{let d=new Date(input.value+'T12:00:00');d.setDate(d.getDate()+1);input.value=iso(d);change()};
+}
+function addSpeech(){
+ const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+ document.querySelectorAll('textarea').forEach(ta=>{
+   const parent=ta.parentElement;if(!parent||parent.querySelector('.speech-wrap'))return;
+   const wrap=document.createElement('div');wrap.className='speech-wrap';
+   const btn=document.createElement('button');btn.type='button';btn.className='speech-btn';btn.textContent='🎙️ Speak';
+   const status=document.createElement('div');status.className='speech-status';parent.append(wrap,status);wrap.append(btn);
+   if(!R){btn.onclick=()=>status.textContent='Use the microphone on the iPhone keyboard to dictate.';return}
+   btn.onclick=()=>{
+    const r=new R();r.lang=navigator.language||'en-IN';r.interimResults=false;r.continuous=false;
+    btn.classList.add('listening');btn.textContent='⏺ Listening…';status.textContent='Speak naturally…';
+    r.onresult=e=>{const t=e.results[0][0].transcript;ta.value+=(ta.value&& !/\s$/.test(ta.value)?' ':'')+t;ta.dispatchEvent(new Event('input',{bubbles:true}))};
+    r.onerror=()=>status.textContent='Could not hear that. Try again.';
+    r.onend=()=>{btn.classList.remove('listening');btn.textContent='🎙️ Speak';setTimeout(()=>{if(status.textContent==='Speak naturally…')status.textContent=''},800)};
+    r.start();
+   };
+ });
+}
+function boot(){addDatePicker();addSpeech();setTimeout(()=>{addDatePicker();addSpeech()},700)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+new MutationObserver(()=>{addDatePicker();addSpeech()}).observe(document.documentElement,{subtree:true,childList:true});
+})();
 </script>
 </body>
 </html>
