@@ -414,7 +414,7 @@ async function renderToday(targetDate){
     `;
     document.getElementById('viewTxtA').textContent = f.a;
     if(f.b) document.getElementById('viewTxtB').textContent = f.b;
-    document.getElementById('editTodayBtn').addEventListener('click', ()=>{ window.__forceEdit = true; renderToday(); });
+    document.getElementById('editTodayBtn').addEventListener('click', ()=>{ window.__forceEdit = true; renderToday(window.selectedDate); });
   } else {
     pendingPhoto = existing ? existing.photo : null;
     wrap.innerHTML = `
@@ -889,13 +889,18 @@ function addDatePicker(){
  const note=document.createElement('div');note.id='nt-date-note';note.className='date-nav-note';note.textContent='You can write or edit an entry for any date.';
  host.insertBefore(note,host.firstChild);host.insertBefore(bar,note.nextSibling);
  const input=bar.querySelector('#nt-date');
- function change(){
-   const v=input.value; window.selectedDate=v;
-   // Support apps that expose a date renderer.
-   window.selectedDate=v; window.__forceEdit=false; if(typeof window.renderToday==='function'){try{window.renderToday(v)}catch(e){}}
-   // Sync an existing date input, if the app has one.
-   [...document.querySelectorAll('input[type=date]')].filter(x=>x!==input).forEach(x=>{try{x.value=v;x.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}});
-   const d=new Date(v+'T12:00:00'); note.textContent=(v===today)?'Today':'Editing '+d.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'});
+ async function change(){
+   const v=input.value;
+   window.selectedDate=v;
+   window.__forceEdit=true;
+   const d=new Date(v+'T12:00:00');
+   note.textContent=(v===today)?'Today':'Editing '+d.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'});
+   if(typeof window.renderToday==='function'){
+     try { await window.renderToday(v); } catch(e) {}
+     // Guard against another render resetting the screen to today.
+     setTimeout(()=>{ if(window.selectedDate===v && typeof window.renderToday==='function') window.renderToday(v); },120);
+     setTimeout(()=>{ if(window.selectedDate===v && typeof window.renderToday==='function') window.renderToday(v); },500);
+   }
  }
  input.onchange=change;
  bar.querySelector('#nt-prev').onclick=()=>{let d=new Date(input.value+'T12:00:00');d.setDate(d.getDate()-1);input.value=iso(d);change()};
