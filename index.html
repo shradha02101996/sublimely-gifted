@@ -293,7 +293,7 @@
     <div class="date-lbl" id="detailDate"></div>
     <img id="detailImg" style="display:none;">
     <div class="txt" id="detailTxt"></div>
-    <button class="overlay-close" id="detailClose">Close</button>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;"><button class="edit-link" id="detailEditBtn">Edit this entry</button><button class="overlay-close" id="detailClose">Close</button></div>
   </div>
 </div>
 
@@ -394,10 +394,11 @@ function switchView(name){
 }
 
 /* ---------- TODAY VIEW ---------- */
-async function renderToday(){
-  const d = todayDate();
+async function renderToday(targetDate){
+  const d = targetDate ? new Date(targetDate + 'T12:00:00') : (window.selectedDate ? new Date(window.selectedDate + 'T12:00:00') : todayDate());
+  window.selectedDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   document.getElementById('todayEyebrow').textContent = DOW[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
-  document.getElementById('todayDate').textContent = 'What are you grateful for tonight?';
+  document.getElementById('todayDate').textContent = d.toDateString() === todayDate().toDateString() ? 'What are you grateful for tonight?' : 'What are you grateful for on this day?';
   const existing = await getEntry(d);
   const wrap = document.getElementById('todayContent');
   const f = fieldsOf(existing);
@@ -409,7 +410,7 @@ async function renderToday(){
         ${f.b ? `<div class="person-label" style="margin-top:16px;">${escapeHtml(settings.nameB)}</div><div class="txt" id="viewTxtB"></div>` : ''}
         ${existing.photo ? `<img src="${existing.photo}">` : ''}
       </div>
-      <div style="text-align:center;"><button class="edit-link" id="editTodayBtn">Edit tonight's note</button></div>
+      <div style="text-align:center;"><button class="edit-link" id="editTodayBtn">Edit this day's note</button></div>
     `;
     document.getElementById('viewTxtA').textContent = f.a;
     if(f.b) document.getElementById('viewTxtB').textContent = f.b;
@@ -470,10 +471,10 @@ async function onSave(){
   if(!textA && !textB){ document.getElementById('entryTextA').focus(); return; }
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Saving...';
-  const d = todayDate();
+  const d = new Date((window.selectedDate || `${todayDate().getFullYear()}-${String(todayDate().getMonth()+1).padStart(2,'0')}-${String(todayDate().getDate()).padStart(2,'0')}`) + 'T12:00:00');
   await saveEntry(d, { textA, textB, photo: pendingPhoto || null, ts: Date.now() });
   window.__forceEdit = false;
-  await renderToday();
+  await renderToday(window.selectedDate);
   await updateStreak();
 }
 
@@ -537,6 +538,15 @@ async function renderHistory(){
   });
 }
 function openDetail(e){
+  window.__detailEntryDate = new Date(e.date);
+  document.getElementById('detailEditBtn').onclick = ()=>{
+    document.getElementById('detailOverlay').classList.remove('active');
+    window.__forceEdit = true;
+    const d=window.__detailEntryDate;
+    window.selectedDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    switchView('today');
+    renderToday(window.selectedDate);
+  };
   document.getElementById('detailDate').textContent = `${DOW[e.date.getDay()]}, ${MONTHS[e.date.getMonth()]} ${e.date.getDate()}, ${e.date.getFullYear()}`;
   const f = fieldsOf(e);
   const txtEl = document.getElementById('detailTxt');
@@ -882,7 +892,7 @@ function addDatePicker(){
  function change(){
    const v=input.value; window.selectedDate=v;
    // Support apps that expose a date renderer.
-   if(typeof window.renderEntryForDate==='function'){try{window.renderEntryForDate(v)}catch(e){}}
+   window.selectedDate=v; window.__forceEdit=false; if(typeof window.renderToday==='function'){try{window.renderToday(v)}catch(e){}}
    // Sync an existing date input, if the app has one.
    [...document.querySelectorAll('input[type=date]')].filter(x=>x!==input).forEach(x=>{try{x.value=v;x.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}});
    const d=new Date(v+'T12:00:00'); note.textContent=(v===today)?'Today':'Editing '+d.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'});
